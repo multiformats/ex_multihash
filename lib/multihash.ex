@@ -22,65 +22,95 @@ defmodule Multihash do
     0x41 => :blake2s
   }
 
+
+  # Error strings
+  @error_invalid_digest_hash "Invalid digest or hash"
+  @error_invalid_multihash "Invalid multihash"
+  @error_invalid_length "Invalid length of provided hash function"
+  @error_invalid_size "Invalid size"
+  @error_invalid_hash_function "Invalid hash function"
+  @error_invalid_hash_code "Invalid hash code"
+
   @doc ~S"""
-  Encode the provided hashed `buffer` to the provided multihash of `hash_code`
+  Encode the provided hashed `digest` to the provided multihash of `hash_code`
 
   ## Examples
 
-      iex> Multihash.encode(:sha1, :crypto(:sha, "Hello"))
-      {:ok, <<17, 20, 3, 207, 111, 77, 15, 122, 5, 39, 156, 32, 84, 243, 87, 250, 58, 168, 116, 66, 222, 82>>}
+      iex> Multihash.encode(:sha1, :crypto.hash(:sha, "Hello"))
+      {:ok, <<17, 20, 247, 255, 158, 139, 123, 178, 224, 155, 112, 147, 90, 93, 120, 94, 12, 197, 217, 208, 171, 240>>}
 
-      iex> Multihash.encode(:sha2_256, :crypto(:sha256, "Hello"))
-      {:ok, <<18, 32, 223, 216, 169, 8, 99, 165, 81, 6, 11, 102, 87, 123, 210, 150, 7, 103, 230, 126, 204, 0, 96, 227, 155, 16, 148, 126, 206, 221, 168, 76, 25, 244>>}
+      iex> Multihash.encode(:sha2_256, :crypto.hash(:sha256, "Hello"))
+      {:ok, <<18, 32, 24, 95, 141, 179, 34, 113, 254, 37, 245, 97, 166, 252, 147, 139, 46, 38, 67, 6, 236, 48, 78, 218, 81, 128, 7, 209, 118, 72, 38, 56, 25, 105>>}
 
-      iex> Multihash.encode(:sha2_512, :crypto(:sha512, "Hello"))
+  Invalid `hash_code`, `digest` length corresponding to the hash function will return an error
 
-  Invalid `hash_code`, `buffer` length corresponding to the hash function will return an error
-
-      iex> Multihash.encode(:sha2_unknow, :crypt(:sha, "Hello"))
+      iex> Multihash.encode(:sha2_unknow, :crypto.hash(:sha, "Hello"))
       {:error, "Invalid hash function"}
 
-      iex> Multihash.encode(0x20, :crypt(:sha, "Hello"))
+      iex> Multihash.encode(0x20, :crypto.hash(:sha, "Hello"))
       {:error, "Invalid hash code"}
-      
-  """
-  def encode(hash_code, buffer) when is_number(hash_code) and is_binary(buffer), do:
-    Monad.Error.p({:ok, <<hash_code>>} |> encode(buffer))
 
-  def encode(<<_hash_code>> = hash_code, buffer) when is_binary(buffer) do
+  """
+  def encode(hash_code, digest) when is_number(hash_code) and is_binary(digest), do:
+    Monad.Error.p({:ok, <<hash_code>>} |> encode(digest))
+
+  def encode(<<_hash_code>> = hash_code, digest) when is_binary(digest) do
     Monad.Error.p do
          {:ok, hash_code}
       |> get_hash_function
-      |> encode(buffer)
+      |> encode(digest)
     end
   end
 
-  def encode(hash_func, buffer) when is_atom(hash_func) and is_binary(buffer) do
+  def encode(hash_func, digest) when is_atom(hash_func) and is_binary(digest) do
     Monad.Error.p do
          {:ok, hash_func}
       |> get_hash_info
-      |> check_buffer_length(buffer)
-      |> encode_internal(buffer)
+      |> check_digest_length(digest)
+      |> encode_internal(digest)
     end
   end
 
-  def encode(_buffer,_hash_code), do: {:error, "Invalid buffer or hash"}
+  def encode(_digest,_hash_code), do: {:error, @error_invalid_digest_hash}
 
+  @doc ~S"""
+  Decode the provided multi hash to %Multihash{code: , name: , length: , digest: }
+
+  ## Examples
+
+      iex> Multihash.decode(<<17, 20, 247, 255, 158, 139, 123, 178, 224, 155, 112, 147, 90, 93, 120, 94, 12, 197, 217, 208, 171, 240>>)
+      {:ok, %Multihash{name: "sha1", code: 17, length: 20, digest: <<247, 255, 158, 139, 123, 178, 224, 155, 112, 147, 90, 93, 120, 94, 12, 197, 217, 208, 171, 240>>}}
+
+  Invalid multihash will result in errors
+
+      iex> Multihash.decode(<<17, 20, 247, 255, 158, 139, 123, 178, 224, 155, 112, 147, 90, 93, 120, 94, 12, 197, 217, 208, 171>>)
+      {:error, "Invalid size"}
+
+      iex> Multihash.decode(<<25, 20, 247, 255, 158, 139, 123, 178, 224, 155, 112, 147, 90, 93, 120, 94, 12, 197, 217, 208, 171, 240>>)
+      {:error, "Invalid hash code"}
+
+      iex> Multihash.decode(<<17, 32, 247, 255, 158, 139, 123, 178, 224, 155, 112, 147, 90, 93, 120, 94, 12, 197, 217, 208, 171, 240>>)
+      {:error, "Invalid length of provided hash function"}
+
+      iex> Multihash.decode("Hello")
+      {:error, "Invalid hash code"}
+
+  """
   def decode(<<code, length, digest::binary>>) do
     Monad.Error.p do
        {:ok, <<code>>}
     |> get_hash_function
     |> get_hash_info
     |> check_length(length)
-    |> check_buffer_length(digest)
+    |> check_digest_length(digest)
     |> decode_internal(digest)
     end
   end
 
-  def decode(_), do: {:error, "Invalid multihash"}
+  def decode(_), do: {:error, @error_invalid_multihash}
 
-  defp encode_internal([code: code, length: length], <<buffer::binary>>) do
-    Monad.Error.return <<code, length>> <> buffer
+  defp encode_internal([code: code, length: length], <<digest::binary>>) do
+    Monad.Error.return <<code, length>> <> digest
   end
 
   defp decode_internal([code: code, length: length], <<digest::binary>>) do
@@ -92,26 +122,41 @@ defmodule Multihash do
       digest: digest}
   end
 
+  @doc """
+  Checks that the `original_lenght` is same as the expected `length` of the hash function
+  """
   defp check_length([code: _code, length: length] = hash_info, original_length) do
     case original_length do
-      ^length -> Monad.Error.return(hash_info)
-      _ -> Monad.Error.fail("Invalid length of provided hash function")
-    end
-  end
-
-  defp check_buffer_length([code: _code, length: length] = hash_info, buffer) when is_binary(buffer) do
-    case byte_size(buffer) do
       ^length -> Monad.Error.return hash_info
-      _ -> Monad.Error.fail("Invalid size")
+      _ -> Monad.Error.fail @error_invalid_length
     end
   end
 
+  @doc """
+  Checks if the length of the `digest` is same as the expected `length` of the has function
+  """
+  defp check_digest_length([code: _code, length: length] = hash_info, digest) when is_binary(digest) do
+    case byte_size(digest) do
+      ^length -> Monad.Error.return hash_info
+      _ -> Monad.Error.fail @error_invalid_size
+    end
+  end
+
+  @doc """
+  Get hash info from the @hash_info keyword map based on the provided `hash_func`
+  """
   defp get_hash_info(hash_func) when is_atom(hash_func), do:
-    get_from_dict(@hash_info, hash_func, "Invalid hash function")
+    get_from_dict(@hash_info, hash_func, @error_invalid_hash_function)
 
+  @doc """
+  Get hash function from the @code_hash_map based on the `code` key
+  """
   defp get_hash_function(<<code>>), do:
-      get_from_dict(@code_hash_map, code, "Invalid hash code")
+      get_from_dict(@code_hash_map, code, @error_invalid_hash_code)
 
+  @doc """
+  Generic function that retrieves a key from the dictionary and if the key is not there then returns {:error, `failure_message`}
+  """
   defp get_from_dict(dict, key, failure_message) do
     case Dict.get(dict, key, :none) do
       :none -> Monad.Error.fail(failure_message)
