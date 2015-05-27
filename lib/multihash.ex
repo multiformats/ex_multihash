@@ -109,10 +109,58 @@ defmodule Multihash do
 
   def decode(_), do: {:error, @error_invalid_multihash}
 
+  @doc ~S"""
+  Checks if the code is within application range
+
+  ## Examples
+
+      iex> Multihash.is_app_code(<<0x08>>)
+      true
+
+      iex> Multihash.is_app_code(<<0x10>>)
+      false
+  """
+  def is_app_code(<<code>>), do: code >= 0 and code < 0x10
+
+  @doc ~S"""
+  Checks if the code is a valid code
+
+  ## Examples
+
+      iex> Multihash.is_valid_code(<<0x8>>)
+      true
+
+      iex> Multihash.is_valid_code(<<0x12>>)
+      true
+
+      iex> Multihash.is_valid_code(<<0x21>>)
+      false
+  """
+  def is_valid_code(<<_>> = code) do
+    if is_app_code(code) do
+      true
+    else
+      is_valid_hash_code code
+    end
+  end
+
+  @doc """
+  Checks if the `code` is a valid hash code
+  """
+  defp is_valid_hash_code(<<_>> = code), do: is_valid_hash_code get_hash_function(code)
+  defp is_valid_hash_code({:ok, _}), do: true
+  defp is_valid_hash_code({:error, _}), do: false
+
+  @doc """
+  Encode the digest to multihash
+  """
   defp encode_internal([code: code, length: length], <<digest::binary>>) do
     Monad.Error.return <<code, length>> <> digest
   end
 
+  @doc """
+  Decode the multihash to %Multihash{name, code, length, digest} structure
+  """
   defp decode_internal([code: code, length: length], <<digest::binary>>) do
     {:ok, name} = get_hash_function <<code>>
     Monad.Error.return %Multihash{
@@ -121,6 +169,13 @@ defmodule Multihash do
       length: length,
       digest: digest}
   end
+
+  @doc """
+  Checks that the `code` is a valid hash code or the code is in application range
+  """
+  defp check_hash_code(code), do: check_hash_code(is_valid_code(code), code)
+  defp check_hash_code(true, code), do: Monad.Error.return code
+  defp check_hash_code(false, _), do: Monad.Error.fail @error_invalid_hash_code
 
   @doc """
   Checks that the `original_lenght` is same as the expected `length` of the hash function
