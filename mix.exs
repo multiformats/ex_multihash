@@ -28,7 +28,8 @@ defmodule Multihash.Mixfile do
   # Type `mix help deps` for more examples and options
   defp deps do
     [
-      {:monad, "~> 1.0.4"}
+      {:monad, "~> 1.0.4"},
+      {:dialyxir, github: "jeremyjh/dialyxir"}
     ]
   end
 end

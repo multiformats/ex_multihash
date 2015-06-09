@@ -2,7 +2,16 @@ defmodule Multihash do
   require Monad.Error
   import Monad.Error
 
+  @type t :: %Multihash{name: String.t, code: integer, length: integer, digest: integer}
   defstruct name: "", code: 0, length: 0, digest: 0
+
+  @type hash_type :: :sha1 | :sha2_256 | :sha2_512 | :sha3 | :blake2b | :blake2s
+
+  @type error :: {:error, String.t}
+
+  @type on_encode :: {:ok, binary} | error
+
+  @type on_decode :: {:ok, t} | error
 
   @hash_info [
     sha1:     [code: 0x11, length: 20],
@@ -51,9 +60,11 @@ defmodule Multihash do
       {:error, "Invalid hash code"}
 
   """
+  @spec encode(integer, binary) :: on_encode
   def encode(hash_code, digest) when is_number(hash_code) and is_binary(digest), do:
     Monad.Error.p({:ok, <<hash_code>>} |> encode(digest))
 
+  @spec encode(binary, binary) :: on_encode
   def encode(<<_hash_code>> = hash_code, digest) when is_binary(digest) do
     Monad.Error.p do
          {:ok, hash_code}
@@ -62,6 +73,7 @@ defmodule Multihash do
     end
   end
 
+  @spec encode(hash_type, binary) :: on_encode
   def encode(hash_func, digest) when is_atom(hash_func) and is_binary(digest) do
     Monad.Error.p do
          {:ok, hash_func}
@@ -96,6 +108,7 @@ defmodule Multihash do
       {:error, "Invalid hash code"}
 
   """
+  @spec decode(binary) :: on_decode
   def decode(<<code, length, digest::binary>>) do
     Monad.Error.p do
        {:ok, <<code>>}
@@ -120,6 +133,7 @@ defmodule Multihash do
       iex> Multihash.is_app_code(<<0x10>>)
       false
   """
+  @spec is_app_code(<<_ :: 8 >>) :: boolean
   def is_app_code(<<code>>), do: code >= 0 and code < 0x10
 
   @doc ~S"""
@@ -136,6 +150,7 @@ defmodule Multihash do
       iex> Multihash.is_valid_code(<<0x21>>)
       false
   """
+  @spec is_valid_code(<<_ :: 8 >>) :: boolean
   def is_valid_code(<<_>> = code) do
     if is_app_code(code) do
       true
