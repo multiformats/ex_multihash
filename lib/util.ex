@@ -1,4 +1,7 @@
 defmodule Multihash.Util do
+  @moduledoc """
+  Utility functions to create multihash from data
+  """
 
   @doc """
   Creates a multihash from the data provided. The hash options are

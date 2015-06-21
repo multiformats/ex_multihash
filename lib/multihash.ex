@@ -1,4 +1,10 @@
 defmodule Multihash do
+  @moduledoc """
+  Multihash library that follows jbenet multihash protocol so that the hash contains information
+  about the hashing algorithm used making it more generic so that one can switch algorithm in future without
+  much consequences
+  """
+
   require Monad.Error
   import Monad.Error
 
