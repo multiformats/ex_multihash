@@ -8,7 +8,7 @@ defmodule Multihash do
   require Monad.Error
   import Monad.Error
 
-  @type t :: %Multihash{name: String.t, code: integer, length: integer, digest: integer}
+  @type t :: %Multihash{name: atom, code: integer, length: integer, digest: integer}
   defstruct name: "", code: 0, length: 0, digest: 0
 
   @type hash_type :: :sha1 | :sha2_256 | :sha2_512 | :sha3 | :blake2b | :blake2s
@@ -97,7 +97,7 @@ defmodule Multihash do
   ## Examples
 
       iex> Multihash.decode(<<17, 20, 247, 255, 158, 139, 123, 178, 224, 155, 112, 147, 90, 93, 120, 94, 12, 197, 217, 208, 171, 240>>)
-      {:ok, %Multihash{name: "sha1", code: 17, length: 20, digest: <<247, 255, 158, 139, 123, 178, 224, 155, 112, 147, 90, 93, 120, 94, 12, 197, 217, 208, 171, 240>>}}
+      {:ok, %Multihash{name: :sha1, code: 17, length: 20, digest: <<247, 255, 158, 139, 123, 178, 224, 155, 112, 147, 90, 93, 120, 94, 12, 197, 217, 208, 171, 240>>}}
 
   Invalid multihash will result in errors
 
@@ -185,7 +185,7 @@ defmodule Multihash do
   defp decode_internal([code: code, length: length], <<digest::binary>>) do
     {:ok, name} = get_hash_function <<code>>
     Monad.Error.return %Multihash{
-      name: to_string(name) |> String.replace("_", "-"),
+      name: to_string(name) |> String.replace("_", "-") |> String.to_atom,
       code: code,
       length: length,
       digest: digest}
