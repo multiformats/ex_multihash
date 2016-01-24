@@ -1,4 +1,4 @@
-%{"dialyxir": {:git, "git://github.com/jeremyjh/dialyxir.git", "e2e172184b782ee28e6fe9b69db2df5c4a39cbeb", []},
+%{"dialyxir": {:git, "https://github.com/jeremyjh/dialyxir.git", "e2e172184b782ee28e6fe9b69db2df5c4a39cbeb", []},
   "inch_ex": {:hex, :inch_ex, "0.3.2"},
   "monad": {:hex, :monad, "1.0.4"},
   "poison": {:hex, :poison, "1.4.0"}}

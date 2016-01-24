@@ -8,8 +8,8 @@ defmodule Multihash do
   require Monad.Error
   import Monad.Error
 
-  @type t :: %Multihash{name: String.t, code: integer, length: integer, digest: integer}
-  defstruct name: "", code: 0, length: 0, digest: 0
+  @type t :: %Multihash{name: atom, code: integer, length: integer, digest: integer}
+  defstruct name: :nil, code: 0, length: 0, digest: 0
 
   @type hash_type :: :sha1 | :sha2_256 | :sha2_512 | :sha3 | :blake2b | :blake2s
 
@@ -18,6 +18,8 @@ defmodule Multihash do
   @type on_encode :: {:ok, binary} | error
 
   @type on_decode :: {:ok, t} | error
+
+  @type integer_default :: integer | :default
 
   @hash_info [
     sha1:     [code: 0x11, length: 20],
@@ -41,7 +43,8 @@ defmodule Multihash do
   # Error strings
   @error_invalid_digest_hash "Invalid digest or hash"
   @error_invalid_multihash "Invalid multihash"
-  @error_invalid_length "Invalid length of provided hash function"
+  @error_invalid_length "Invalid length"
+  @error_invalid_trunc_length "Invalid truncation length"
   @error_invalid_size "Invalid size"
   @error_invalid_hash_function "Invalid hash function"
   @error_invalid_hash_code "Invalid hash code"
@@ -54,6 +57,10 @@ defmodule Multihash do
       iex> Multihash.encode(:sha1, :crypto.hash(:sha, "Hello"))
       {:ok, <<17, 20, 247, 255, 158, 139, 123, 178, 224, 155, 112, 147, 90, 93, 120, 94, 12, 197, 217, 208, 171, 240>>}
 
+      iex> Multihash.encode(:sha3, "1234567890123456789012345678901234567890123456789012345678901234", 10)
+      {:ok, <<20, 10, 49, 50, 51, 52, 53, 54, 55, 56, 57, 48>>}
+
+
       iex> Multihash.encode(:sha2_256, :crypto.hash(:sha256, "Hello"))
       {:ok, <<18, 32, 24, 95, 141, 179, 34, 113, 254, 37, 245, 97, 166, 252, 147, 139, 46, 38, 67, 6, 236, 48, 78, 218, 81, 128, 7, 209, 118, 72, 38, 56, 25, 105>>}
 
@@ -65,31 +72,43 @@ defmodule Multihash do
       iex> Multihash.encode(0x20, :crypto.hash(:sha, "Hello"))
       {:error, "Invalid hash code"}
 
-  """
-  @spec encode(integer, binary) :: on_encode
-  def encode(hash_code, digest) when is_number(hash_code) and is_binary(digest), do:
-    Monad.Error.p({:ok, <<hash_code>>} |> encode(digest))
+  It's possible to [truncate a digest](https://github.com/jbenet/multihash/issues/1#issuecomment-91783612)
+  by passing an optional `length` parameter. Passing a `length` longer than the default digest length
+  of the hash function will return an error.
 
-  @spec encode(binary, binary) :: on_encode
-  def encode(<<_hash_code>> = hash_code, digest) when is_binary(digest) do
+      iex> Multihash.encode(:sha1, :crypto.hash(:sha, "Hello"), 10)
+      {:ok, <<17, 10, 247, 255, 158, 139, 123, 178, 224, 155, 112, 147>>}
+
+      iex> Multihash.encode(:sha1, :crypto.hash(:sha, "Hello"), 30)
+      {:error, "Invalid truncation length"}
+
+  """
+  def encode(hash_code, digest, length \\ :default)
+
+  @spec encode(integer, binary, integer_default) :: on_encode
+  def encode(hash_code, digest, length) when is_number(hash_code) and is_binary(digest), do:
+    Monad.Error.p({:ok, <<hash_code>>} |> encode(digest, length))
+
+  @spec encode(binary, binary, integer_default) :: on_encode
+  def encode(<<_hash_code>> = hash_code, digest, length) when is_binary(digest) do
     Monad.Error.p do
          {:ok, hash_code}
       |> get_hash_function
-      |> encode(digest)
+      |> encode(digest, length)
     end
   end
 
-  @spec encode(hash_type, binary) :: on_encode
-  def encode(hash_func, digest) when is_atom(hash_func) and is_binary(digest) do
+  @spec encode(hash_type, binary, integer_default) :: on_encode
+  def encode(hash_func, digest, length) when is_atom(hash_func) and is_binary(digest) do
     Monad.Error.p do
          {:ok, hash_func}
       |> get_hash_info
       |> check_digest_length(digest)
-      |> encode_internal(digest)
+      |> encode_internal(digest, length)
     end
   end
 
-  def encode(_digest,_hash_code), do: {:error, @error_invalid_digest_hash}
+  def encode(_digest,_hash_code, _length), do: {:error, @error_invalid_digest_hash}
 
   @doc ~S"""
   Decode the provided multi hash to %Multihash{code: , name: , length: , digest: }
@@ -97,7 +116,10 @@ defmodule Multihash do
   ## Examples
 
       iex> Multihash.decode(<<17, 20, 247, 255, 158, 139, 123, 178, 224, 155, 112, 147, 90, 93, 120, 94, 12, 197, 217, 208, 171, 240>>)
-      {:ok, %Multihash{name: "sha1", code: 17, length: 20, digest: <<247, 255, 158, 139, 123, 178, 224, 155, 112, 147, 90, 93, 120, 94, 12, 197, 217, 208, 171, 240>>}}
+      {:ok, %Multihash{name: :sha1, code: 17, length: 20, digest: <<247, 255, 158, 139, 123, 178, 224, 155, 112, 147, 90, 93, 120, 94, 12, 197, 217, 208, 171, 240>>}}
+
+      iex> Multihash.decode(<<17, 10, 247, 255, 158, 139, 123, 178, 224, 155, 112, 147>>)
+      {:ok, %Multihash{name: :sha1, code: 17, length: 10, digest: <<247, 255, 158, 139, 123, 178, 224, 155, 112, 147>>}}
 
   Invalid multihash will result in errors
 
@@ -108,7 +130,7 @@ defmodule Multihash do
       {:error, "Invalid hash code"}
 
       iex> Multihash.decode(<<17, 32, 247, 255, 158, 139, 123, 178, 224, 155, 112, 147, 90, 93, 120, 94, 12, 197, 217, 208, 171, 240>>)
-      {:error, "Invalid length of provided hash function"}
+      {:error, "Invalid length"}
 
       iex> Multihash.decode("Hello")
       {:error, "Invalid hash code"}
@@ -121,8 +143,8 @@ defmodule Multihash do
     |> get_hash_function
     |> get_hash_info
     |> check_length(length)
-    |> check_digest_length(digest)
-    |> decode_internal(digest)
+    |> check_truncated_digest_length(digest, length)
+    |> decode_internal(digest, length)
     end
   end
 
@@ -173,19 +195,23 @@ defmodule Multihash do
   defp is_valid_hash_code({:error, _}), do: false
 
   @doc """
-  Encode the digest to multihash
+  Encode the `digest` to multihash, truncating it to the `trunc_length` if necessary
   """
-  defp encode_internal([code: code, length: length], <<digest::binary>>) do
-    Monad.Error.return <<code, length>> <> digest
+  defp encode_internal([code: code, length: length], <<digest::binary>>, trunc_length) do
+    case trunc_length do
+      :default -> Monad.Error.return <<code, length>> <> digest
+      l when 0 < l and l <= length -> Monad.Error.return <<code, l>> <> Kernel.binary_part(digest, 0, l)
+      _ -> Monad.Error.fail @error_invalid_trunc_length
+    end
   end
 
   @doc """
   Decode the multihash to %Multihash{name, code, length, digest} structure
   """
-  defp decode_internal([code: code, length: length], <<digest::binary>>) do
+  defp decode_internal([code: code, length: _default_length], <<digest::binary>>, length) do
     {:ok, name} = get_hash_function <<code>>
     Monad.Error.return %Multihash{
-      name: to_string(name) |> String.replace("_", "-"),
+      name: name,
       code: code,
       length: length,
       digest: digest}
@@ -199,21 +225,31 @@ defmodule Multihash do
   defp check_hash_code(false, _), do: Monad.Error.fail @error_invalid_hash_code
 
   @doc """
-  Checks that the `original_lenght` is same as the expected `length` of the hash function
+  Checks if the incoming multihash has a `length` field equal or lower than the `default_length` of the hash function
   """
-  defp check_length([code: _code, length: length] = hash_info, original_length) do
+  defp check_length([code: _code, length: default_length] = hash_info, original_length) do
     case original_length do
-      ^length -> Monad.Error.return hash_info
+      l when 0 < l and l <= default_length -> Monad.Error.return hash_info
       _ -> Monad.Error.fail @error_invalid_length
     end
   end
 
   @doc """
-  Checks if the length of the `digest` is same as the expected `length` of the has function
+  Checks if the incoming multihash has a `length` field fitting the actual size of the possibly truncated `digest`
   """
-  defp check_digest_length([code: _code, length: length] = hash_info, digest) when is_binary(digest) do
+  defp check_truncated_digest_length([code: _code, length: _default_length] = hash_info, digest, length) when is_binary(digest) do
     case byte_size(digest) do
       ^length -> Monad.Error.return hash_info
+      _ -> Monad.Error.fail @error_invalid_size
+    end
+  end
+
+  @doc """
+  Checks if the length of the `digest` is same as the expected `default_length` of the hash function while encoding
+  """
+  defp check_digest_length([code: _code, length: default_length] = hash_info, digest) when is_binary(digest) do
+    case byte_size(digest) do
+      ^default_length -> Monad.Error.return hash_info
       _ -> Monad.Error.fail @error_invalid_size
     end
   end
