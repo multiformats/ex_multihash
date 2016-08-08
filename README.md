@@ -1,10 +1,12 @@
 Multihash
 =========
-[![Build Status](https://semaphoreci.com/api/v1/projects/573a8af3-de7b-4be1-83f5-3b7c0874d74d/446754/badge.svg)](https://semaphoreci.com/zabirauf/ex_multihash)      
-[![Build Status](https://api.travis-ci.org/zabirauf/ex_multihash.svg?branch=master)](https://travis-ci.org/zabirauf/ex_multihash)
-[![Inline docs](http://inch-ci.org/github/zabirauf/ex_multihash.svg)](http://inch-ci.org/github/zabirauf/ex_multihash)
 
-[Multihash](https://github.com/jbenet/multihash) implementation in Elixir
+[![hex.pm version](https://img.shields.io/hexpm/v/httpotion.svg?style=flat)](https://hex.pm/packages/ex_multihash)
+[![API Docs](https://img.shields.io/badge/api-docs-yellow.svg?style=flat)](http://hexdocs.pm/ex_multihash/)
+[![Build Status](https://api.travis-ci.org/multiformats/ex_multihash.svg?branch=master)](https://travis-ci.org/multiformats/ex_multihash)
+[![Inline docs](http://inch-ci.org/github/multiformats/ex_multihash.svg)](http://inch-ci.org/github/multiformats/ex_multihash)
+
+[Multihash](https://github.com/multiformats/multihash) implementation in Elixir
 
 # How to use it
 

@@ -1,4 +1,6 @@
 %{"dialyxir": {:git, "https://github.com/jeremyjh/dialyxir.git", "e2e172184b782ee28e6fe9b69db2df5c4a39cbeb", []},
-  "inch_ex": {:hex, :inch_ex, "0.3.2"},
-  "monad": {:hex, :monad, "1.0.4"},
-  "poison": {:hex, :poison, "1.4.0"}}
+  "earmark": {:hex, :earmark, "1.0.1", "2c2cd903bfdc3de3f189bd9a8d4569a075b88a8981ded9a0d95672f6e2b63141", [:mix], []},
+  "ex_doc": {:hex, :ex_doc, "0.13.0", "aa2f8fe4c6136a2f7cfc0a7e06805f82530e91df00e2bff4b4362002b43ada65", [:mix], [{:earmark, "~> 1.0", [hex: :earmark, optional: false]}]},
+  "inch_ex": {:hex, :inch_ex, "0.5.3", "39f11e96181ab7edc9c508a836b33b5d9a8ec0859f56886852db3d5708889ae7", [:mix], [{:poison, "~> 1.5 or ~> 2.0", [hex: :poison, optional: false]}]},
+  "monad": {:hex, :monad, "1.0.4", "21504cdb9986cac3599055997dc984e77dbb89aef71decadf4921cf0e8f28c06", [:mix], []},
+  "poison": {:hex, :poison, "2.2.0", "4763b69a8a77bd77d26f477d196428b741261a761257ff1cf92753a0d4d24a63", [:mix], []}}

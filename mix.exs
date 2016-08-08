@@ -2,12 +2,29 @@ defmodule Multihash.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :multihash,
-     version: "0.0.1",
+    [app: :ex_multihash,
+     version: "1.0.0",
      elixir: "~> 1.0",
+     description: description,
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     package: package,
      deps: deps]
+  end
+
+  def description do
+    "This library is the Multihash implementation in Elixir"
+  end
+
+  def package do
+    [
+      licenses: ["MIT License"],
+      maintainers: ["Zohaib Rauf", "Multiformat Organization"],
+      links: %{
+        "Github" => "https://github.com/multiformats/ex_multihash",
+        "Docs" => "https://hexdocs.pm/ex_multihash"
+      }
+    ]
   end
 
   # Configuration for the OTP application
@@ -30,7 +47,8 @@ defmodule Multihash.Mixfile do
     [
       {:monad, "~> 1.0.4"},
       {:dialyxir, github: "jeremyjh/dialyxir"},
-      {:inch_ex, only: :docs}
+      {:inch_ex, "~> 0.5", only: :docs},
+      {:ex_doc, "~> 0.12", only: :dev}
     ]
   end
 end
