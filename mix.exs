@@ -46,8 +46,8 @@ defmodule Multihash.Mixfile do
   defp deps do
     [
       {:monad, "~> 1.0.4"},
-      {:dialyxir, github: "jeremyjh/dialyxir"},
       {:inch_ex, "~> 0.5", only: :docs},
+      {:dialyxir, "~> 0.3.5", only: :dev},
       {:ex_doc, "~> 0.12", only: :dev}
     ]
   end
