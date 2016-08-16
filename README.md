@@ -5,17 +5,49 @@ Multihash
 [![API Docs](https://img.shields.io/badge/api-docs-yellow.svg?style=flat)](http://hexdocs.pm/ex_multihash/)
 [![Build Status](https://api.travis-ci.org/multiformats/ex_multihash.svg?branch=master)](https://travis-ci.org/multiformats/ex_multihash)
 [![Inline docs](http://inch-ci.org/github/multiformats/ex_multihash.svg)](http://inch-ci.org/github/multiformats/ex_multihash)
+[![](https://img.shields.io/badge/project-multiformats-blue.svg?style=flat-square)](http://github.com/multiformats/multiformats)
+[![](https://img.shields.io/badge/freenode-%23ipfs-blue.svg?style=flat-square)](http://webchat.freenode.net/?channels=%23ipfs)
 
-[Multihash](https://github.com/multiformats/multihash) implementation in Elixir
+> Multihash implementation in Elixir
 
-# How to use it
+This is the [Multihash](https://github.com/multiformats/multihash) implementation in Elixir.
 
-## Encoding
-Encode the provided hashed `digest` to the provided multihash of `hash_code`
+## Table of Contents
 
-### Examples
+- [Install](#install)
+- [Usage](#usage)
+  - [Encoding](#encoding)
+    - [Examples](#examples)
+    - [Examples](#examples-1)
+    - [Examples](#examples-2)
+  - [Decoding](#decoding)
+    - [Examples](#examples-3)
+    - [Examples](#examples-4)
+- [Maintainers](#maintainers)
+- [Contribute](#contribute)
+- [License](#license)
 
+## Install
+
+To use ex_multihash add to your `mix.exs` file:
+
+```elixir
+defp deps do
+  [
+    {:ex_multihash, "~> 1.0"}
+  ]
+end
 ```
+
+##  Usage
+
+### Encoding
+
+Encode the provided hashed `digest` to the provided multihash of `hash_code`.
+
+#### Examples
+
+```elixir
 iex> Multihash.encode(:sha1, :crypto.hash(:sha, "Hello"))
 {:ok, <<17, 20, 247, 255, 158, 139, 123, 178, 224, 155, 112, 147, 90, 93, 120, 94, 12, 197, 217, 208, 171, 240>>}
 
@@ -25,9 +57,9 @@ iex> Multihash.encode(:sha2_256, :crypto.hash(:sha256, "Hello"))
 
 Invalid `hash_code` or `digest` corresponding to the hash function will return an error.
 
-### Examples
+#### Examples
 
-```
+```elixir
 iex> Multihash.encode(:sha2_unknow, :crypto.hash(:sha, "Hello"))
 {:error, "Invalid hash function"}
 
@@ -37,29 +69,35 @@ iex> Multihash.encode(0x20, :crypto.hash(:sha, "Hello"))
 
 It's possible to [truncate a digest](https://github.com/jbenet/multihash/issues/1#issuecomment-91783612) by passing an optional `length` parameter. Passing a `length` longer than the default digest length of the hash function will return an error.
 
-### Examples
-```
+#### Examples
+
+```elixir
 iex> Multihash.encode(:sha1, :crypto.hash(:sha, "Hello"), 10)
 {:ok, <<17, 10, 247, 255, 158, 139, 123, 178, 224, 155, 112, 147>>}
 iex> Multihash.encode(:sha1, :crypto.hash(:sha, "Hello"), 30)
 {:error, "Invalid digest length"}
 ```
 
-## Decoding
+### Decoding
 
-Decode the provided multihash to %Multihash{code: , name: , length: , digest: }
+Decode the provided multihash to:
 
-### Examples
-
+```elixir
+%Multihash{name: atom, code: integer, length: integer, digest: bitstring}
 ```
+
+#### Examples
+
+```elixir
 iex> Multihash.decode(<<17, 20, 247, 255, 158, 139, 123, 178, 224, 155, 112, 147, 90, 93, 120, 94, 12, 197, 217, 208, 171, 240>>)
 {:ok, %Multihash{name: :sha1, code: 17, length: 20, digest: <<247, 255, 158, 139, 123, 178, 224, 155, 112, 147, 90, 93, 120, 94, 12, 197, 217, 208, 171, 240>>}}
 ```
 
 Invalid multihash will result in errors
 
-### Examples
-```
+#### Examples
+
+```elixir
 iex> Multihash.decode(<<17, 20, 247, 255, 158, 139, 123, 178, 224, 155, 112, 147, 90, 93, 120, 94, 12, 197, 217, 208, 171>>)
 {:error, "Invalid size"}
 
@@ -76,5 +114,17 @@ iex> Multihash.decode("Hello")
 {:error, "Invalid hash code"}
 ```
 
-# License
-MIT
+## Maintainers
+
+Captain: [@zabirauf](https://github.com/zabirauf).
+
+## Contribute
+
+Contributions welcome. Please check out [the issues](https://github.com/multiformats/ex_multihash/issues).
+
+Check out our [contributing document](https://github.com/multiformats/multiformats/blob/master/contributing.md) for more information on how we work, and about contributing in general. Please be aware that all interactions related to multiformats are subject to the IPFS [Code of Conduct](https://github.com/ipfs/community/blob/master/code-of-conduct.md).
+
+Small note: If editing the Readme, please conform to the [standard-readme](https://github.com/RichardLitt/standard-readme) specification.
+
+## License
+[MIT](LICENSE) © Zohaib Rauf.
