@@ -42,11 +42,12 @@ end
 ##  Usage
 
 ### Encoding
-Encode the provided hashed `digest` to the provided multihash of `hash_code`
+
+Encode the provided hashed `digest` to the provided multihash of `hash_code`.
 
 #### Examples
 
-```
+```elixir
 iex> Multihash.encode(:sha1, :crypto.hash(:sha, "Hello"))
 {:ok, <<17, 20, 247, 255, 158, 139, 123, 178, 224, 155, 112, 147, 90, 93, 120, 94, 12, 197, 217, 208, 171, 240>>}
 
@@ -58,7 +59,7 @@ Invalid `hash_code` or `digest` corresponding to the hash function will return a
 
 #### Examples
 
-```
+```elixir
 iex> Multihash.encode(:sha2_unknow, :crypto.hash(:sha, "Hello"))
 {:error, "Invalid hash function"}
 
@@ -69,7 +70,8 @@ iex> Multihash.encode(0x20, :crypto.hash(:sha, "Hello"))
 It's possible to [truncate a digest](https://github.com/jbenet/multihash/issues/1#issuecomment-91783612) by passing an optional `length` parameter. Passing a `length` longer than the default digest length of the hash function will return an error.
 
 #### Examples
-```
+
+```elixir
 iex> Multihash.encode(:sha1, :crypto.hash(:sha, "Hello"), 10)
 {:ok, <<17, 10, 247, 255, 158, 139, 123, 178, 224, 155, 112, 147>>}
 iex> Multihash.encode(:sha1, :crypto.hash(:sha, "Hello"), 30)
@@ -86,7 +88,7 @@ Decode the provided multihash to:
 
 #### Examples
 
-```
+```elixir
 iex> Multihash.decode(<<17, 20, 247, 255, 158, 139, 123, 178, 224, 155, 112, 147, 90, 93, 120, 94, 12, 197, 217, 208, 171, 240>>)
 {:ok, %Multihash{name: :sha1, code: 17, length: 20, digest: <<247, 255, 158, 139, 123, 178, 224, 155, 112, 147, 90, 93, 120, 94, 12, 197, 217, 208, 171, 240>>}}
 ```
@@ -94,7 +96,8 @@ iex> Multihash.decode(<<17, 20, 247, 255, 158, 139, 123, 178, 224, 155, 112, 147
 Invalid multihash will result in errors
 
 #### Examples
-```
+
+```elixir
 iex> Multihash.decode(<<17, 20, 247, 255, 158, 139, 123, 178, 224, 155, 112, 147, 90, 93, 120, 94, 12, 197, 217, 208, 171>>)
 {:error, "Invalid size"}
 
