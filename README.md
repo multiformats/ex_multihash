@@ -78,7 +78,11 @@ iex> Multihash.encode(:sha1, :crypto.hash(:sha, "Hello"), 30)
 
 ### Decoding
 
-Decode the provided multihash to %Multihash{code: , name: , length: , digest: }
+Decode the provided multihash to:
+
+```elixir
+%Multihash{name: atom, code: integer, length: integer, digest: bitstring}
+```
 
 #### Examples
 
