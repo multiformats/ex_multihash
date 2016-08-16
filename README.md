@@ -29,7 +29,15 @@ This is the [Multihash](https://github.com/multiformats/multihash) implementatio
 
 ## Install
 
-TODO
+To use ex_multihash add to your `mix.exs` file:
+
+```elixir
+defp deps do
+  [
+    {:ex_multihash, "~> 1.0"}
+  ]
+end
+```
 
 ##  Usage
 
