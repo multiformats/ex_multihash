@@ -67,7 +67,7 @@ iex> Multihash.encode(0x20, :crypto.hash(:sha, "Hello"))
 {:error, "Invalid hash code"}
 ```
 
-It's possible to [truncate a digest](https://github.com/jbenet/multihash/issues/1#issuecomment-91783612) by passing an optional `length` parameter. Passing a `length` longer than the default digest length of the hash function will return an error.
+It's possible to [truncate a digest](https://github.com/multiformats/multihash/issues/1) by passing an optional `length` parameter. Passing a `length` longer than the default digest length of the hash function will return an error.
 
 #### Examples
 
