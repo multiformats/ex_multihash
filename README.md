@@ -1,12 +1,13 @@
-Multihash
-=========
+ex_multihash
+============
 
-[![hex.pm version](https://img.shields.io/hexpm/v/httpotion.svg?style=flat)](https://hex.pm/packages/ex_multihash)
-[![API Docs](https://img.shields.io/badge/api-docs-yellow.svg?style=flat)](http://hexdocs.pm/ex_multihash/)
-[![Build Status](https://api.travis-ci.org/multiformats/ex_multihash.svg?branch=master)](https://travis-ci.org/multiformats/ex_multihash)
+[![hex.pm version](https://img.shields.io/hexpm/v/httpotion.svg?style=flat-square)](https://hex.pm/packages/ex_multihash)
+[![API Docs](https://img.shields.io/badge/api-docs-yellow.svg?style=flat-square)](http://hexdocs.pm/ex_multihash/)
+[![Travis CI](https://img.shields.io/travis/multiformats/ex_multihash.svg?style=flat-square&branch=master)](https://travis-ci.org/multiformats/ex_multihash)
 [![Inline docs](http://inch-ci.org/github/multiformats/ex_multihash.svg)](http://inch-ci.org/github/multiformats/ex_multihash)
-[![](https://img.shields.io/badge/project-multiformats-blue.svg?style=flat-square)](http://github.com/multiformats/multiformats)
-[![](https://img.shields.io/badge/freenode-%23ipfs-blue.svg?style=flat-square)](http://webchat.freenode.net/?channels=%23ipfs)
+[![](https://img.shields.io/badge/project-multiformats-blue.svg?style=flat-square)](https://github.com/multiformats/multiformats)
+[![](https://img.shields.io/badge/freenode-%23ipfs-blue.svg?style=flat-square)](https://webchat.freenode.net/?channels=%23ipfs)
+[![](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
 > Multihash implementation in Elixir
 
@@ -39,7 +40,7 @@ defp deps do
 end
 ```
 
-##  Usage
+## Usage
 
 ### Encoding
 
@@ -127,4 +128,4 @@ Check out our [contributing document](https://github.com/multiformats/multiforma
 Small note: If editing the Readme, please conform to the [standard-readme](https://github.com/RichardLitt/standard-readme) specification.
 
 ## License
-[MIT](LICENSE) © Zohaib Rauf.
+[MIT](LICENSE) © 2015 Zohaib Rauf.
