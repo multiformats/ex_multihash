@@ -3,8 +3,8 @@ defmodule Multihash.Mixfile do
 
   def project do
     [app: :ex_multihash,
-     version: "1.0.0",
-     elixir: "~> 1.0",
+     version: "2.0.0",
+     elixir: "~> 1.2",
      description: description(),
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
