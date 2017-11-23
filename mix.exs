@@ -5,11 +5,11 @@ defmodule Multihash.Mixfile do
     [app: :ex_multihash,
      version: "1.0.0",
      elixir: "~> 1.0",
-     description: description,
+     description: description(),
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     package: package,
-     deps: deps]
+     package: package(),
+     deps: deps()]
   end
 
   def description do
@@ -45,7 +45,6 @@ defmodule Multihash.Mixfile do
   # Type `mix help deps` for more examples and options
   defp deps do
     [
-      {:monad, "~> 1.0.4"},
       {:inch_ex, "~> 0.5", only: :docs},
       {:dialyxir, "~> 0.3.5", only: :dev},
       {:ex_doc, "~> 0.12", only: :dev}

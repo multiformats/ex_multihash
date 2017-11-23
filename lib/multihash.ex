@@ -5,9 +5,6 @@ defmodule Multihash do
   much consequences
   """
 
-  require Monad.Error
-  import Monad.Error
-
   @type t :: %Multihash{name: atom, code: integer, length: integer, digest: integer}
   defstruct name: :nil, code: 0, length: 0, digest: 0
 
@@ -21,14 +18,14 @@ defmodule Multihash do
 
   @type integer_default :: integer | :default
 
-  @hash_info [
-    sha1:     [code: 0x11, length: 20],
-    sha2_256: [code: 0x12, length: 32],
-    sha2_512: [code: 0x13, length: 64],
-    sha3:     [code: 0x14, length: 64],
-    blake2b:  [code: 0x40, length: 64],
-    blake2s:  [code: 0x41, length: 32]
-  ]
+  @hash_info %{
+    :sha1     => [code: 0x11, length: 20],
+    :sha2_256 => [code: 0x12, length: 32],
+    :sha2_512 => [code: 0x13, length: 64],
+    :sha3     => [code: 0x14, length: 64],
+    :blake2b  => [code: 0x40, length: 64],
+    :blake2s  => [code: 0x41, length: 32]
+  }
 
   @code_hash_map %{
     0x11 => :sha1,
@@ -87,25 +84,19 @@ defmodule Multihash do
 
   @spec encode(integer, binary, integer_default) :: on_encode
   def encode(hash_code, digest, length) when is_number(hash_code) and is_binary(digest), do:
-    Monad.Error.p({:ok, <<hash_code>>} |> encode(digest, length))
+    encode(<<hash_code>>, digest, length)
 
   @spec encode(binary, binary, integer_default) :: on_encode
   def encode(<<_hash_code>> = hash_code, digest, length) when is_binary(digest) do
-    Monad.Error.p do
-         {:ok, hash_code}
-      |> get_hash_function
-      |> encode(digest, length)
-    end
+    with {:ok, function} <- get_hash_function(hash_code),
+      do: encode(function, digest, length)
   end
 
   @spec encode(hash_type, binary, integer_default) :: on_encode
   def encode(hash_func, digest, length) when is_atom(hash_func) and is_binary(digest) do
-    Monad.Error.p do
-         {:ok, hash_func}
-      |> get_hash_info
-      |> check_digest_length(digest)
-      |> encode_internal(digest, length)
-    end
+    with {:ok, info} <- get_hash_info(hash_func),
+         :ok <- check_digest_length(info, digest),
+    do: encode_internal(info, digest, length)
   end
 
   def encode(_digest,_hash_code, _length), do: {:error, @error_invalid_digest_hash}
@@ -138,14 +129,11 @@ defmodule Multihash do
   """
   @spec decode(binary) :: on_decode
   def decode(<<code, length, digest::binary>>) do
-    Monad.Error.p do
-       {:ok, <<code>>}
-    |> get_hash_function
-    |> get_hash_info
-    |> check_length(length)
-    |> check_truncated_digest_length(digest, length)
-    |> decode_internal(digest, length)
-    end
+    with {:ok, function} <- get_hash_function(<<code>>),
+         {:ok, info} <- get_hash_info(function),
+         :ok <- check_length(info, length),
+         :ok <- check_truncated_digest_length(info, digest, length),
+    do: decode_internal(info, digest, length)
   end
 
   def decode(_), do: {:error, @error_invalid_multihash}
@@ -199,9 +187,9 @@ defmodule Multihash do
   """
   defp encode_internal([code: code, length: length], <<digest::binary>>, trunc_length) do
     case trunc_length do
-      :default -> Monad.Error.return <<code, length>> <> digest
-      l when 0 < l and l <= length -> Monad.Error.return <<code, l>> <> Kernel.binary_part(digest, 0, l)
-      _ -> Monad.Error.fail @error_invalid_trunc_length
+      :default -> {:ok,  <<code, length>> <> digest}
+      l when 0 < l and l <= length -> {:ok, <<code, l>> <> Kernel.binary_part(digest, 0, l)}
+      _ -> {:error, @error_invalid_trunc_length}
     end
   end
 
@@ -210,47 +198,41 @@ defmodule Multihash do
   """
   defp decode_internal([code: code, length: _default_length], <<digest::binary>>, length) do
     {:ok, name} = get_hash_function <<code>>
-    Monad.Error.return %Multihash{
-      name: name,
-      code: code,
-      length: length,
-      digest: digest}
+    {:ok, 
+      %Multihash{
+        name: name,
+        code: code,
+        length: length,
+        digest: digest}}
   end
-
-  @doc """
-  Checks that the `code` is a valid hash code or the code is in application range
-  """
-  defp check_hash_code(code), do: check_hash_code(is_valid_code(code), code)
-  defp check_hash_code(true, code), do: Monad.Error.return code
-  defp check_hash_code(false, _), do: Monad.Error.fail @error_invalid_hash_code
 
   @doc """
   Checks if the incoming multihash has a `length` field equal or lower than the `default_length` of the hash function
   """
-  defp check_length([code: _code, length: default_length] = hash_info, original_length) do
+  defp check_length([code: _code, length: default_length], original_length) do
     case original_length do
-      l when 0 < l and l <= default_length -> Monad.Error.return hash_info
-      _ -> Monad.Error.fail @error_invalid_length
+      l when 0 < l and l <= default_length -> :ok
+      _ -> {:error, @error_invalid_length}
     end
   end
 
   @doc """
   Checks if the incoming multihash has a `length` field fitting the actual size of the possibly truncated `digest`
   """
-  defp check_truncated_digest_length([code: _code, length: _default_length] = hash_info, digest, length) when is_binary(digest) do
+  defp check_truncated_digest_length([code: _code, length: _default_length], digest, length) when is_binary(digest) do
     case byte_size(digest) do
-      ^length -> Monad.Error.return hash_info
-      _ -> Monad.Error.fail @error_invalid_size
+      ^length -> :ok
+      _ -> {:error, @error_invalid_size}
     end
   end
 
   @doc """
   Checks if the length of the `digest` is same as the expected `default_length` of the hash function while encoding
   """
-  defp check_digest_length([code: _code, length: default_length] = hash_info, digest) when is_binary(digest) do
+  defp check_digest_length([code: _code, length: default_length], digest) when is_binary(digest) do
     case byte_size(digest) do
-      ^default_length -> Monad.Error.return hash_info
-      _ -> Monad.Error.fail @error_invalid_size
+      ^default_length -> :ok
+      _ -> {:error, @error_invalid_size}
     end
   end
 
@@ -270,9 +252,9 @@ defmodule Multihash do
   Generic function that retrieves a key from the dictionary and if the key is not there then returns {:error, `failure_message`}
   """
   defp get_from_dict(dict, key, failure_message) do
-    case Dict.get(dict, key, :none) do
-      :none -> Monad.Error.fail(failure_message)
-      value-> Monad.Error.return(value)
+    case Map.get(dict, key, :none) do
+      :none -> {:error, failure_message}
+      value-> {:ok, value}
     end
   end
 
