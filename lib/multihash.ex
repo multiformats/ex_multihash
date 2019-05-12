@@ -76,6 +76,9 @@ defmodule Multihash do
       iex> Multihash.encode(:sha1, :crypto.hash(:sha, "Hello"), 10)
       {:ok, <<17, 10, 247, 255, 158, 139, 123, 178, 224, 155, 112, 147>>}
 
+      iex> Multihash.encode(:sha1, :crypto.hash(:sha, "Hello") |> Kernel.binary_part(0, 10), 10)
+      {:ok, <<17, 10, 247, 255, 158, 139, 123, 178, 224, 155, 112, 147>>}
+
       iex> Multihash.encode(:sha1, :crypto.hash(:sha, "Hello"), 30)
       {:error, "Invalid truncation length"}
 
