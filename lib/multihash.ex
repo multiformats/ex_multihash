@@ -95,7 +95,7 @@ defmodule Multihash do
   @spec encode(hash_type, binary, integer_default) :: on_encode
   def encode(hash_func, digest, length) when is_atom(hash_func) and is_binary(digest) do
     with {:ok, info} <- get_hash_info(hash_func),
-         :ok <- check_digest_length(info, digest),
+         :ok <- check_digest_length(info, digest, length),
     do: encode_internal(info, digest, length)
   end
 
@@ -198,7 +198,7 @@ defmodule Multihash do
   """
   defp decode_internal([code: code, length: _default_length], <<digest::binary>>, length) do
     {:ok, name} = get_hash_function <<code>>
-    {:ok, 
+    {:ok,
       %Multihash{
         name: name,
         code: code,
@@ -227,11 +227,12 @@ defmodule Multihash do
   end
 
   @doc """
-  Checks if the length of the `digest` is same as the expected `default_length` of the hash function while encoding
+  Checks if the length of the `digest` is greater than the the desired truncated length
   """
-  defp check_digest_length([code: _code, length: default_length], digest) when is_binary(digest) do
+  defp check_digest_length([code: _code, length: default_length], digest, trunc_length) when is_binary(digest) do
     case byte_size(digest) do
       ^default_length -> :ok
+      digest_len when digest_len >= trunc_length -> :ok
       _ -> {:error, @error_invalid_size}
     end
   end
