@@ -227,7 +227,7 @@ defmodule Multihash do
   end
 
   @doc """
-  Checks if the length of the `digest` is greater than the the desired truncated length
+  Checks if the length of the `digest` is the default length for the hash function,or at least greater than the the desired truncated length
   """
   defp check_digest_length([code: _code, length: default_length], digest, trunc_length) when is_binary(digest) do
     case byte_size(digest) do
