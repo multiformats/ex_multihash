@@ -235,7 +235,7 @@ defmodule Multihash do
   defp check_digest_length([code: _code, length: default_length], digest, trunc_length) when is_binary(digest) do
     case byte_size(digest) do
       ^default_length -> :ok
-      digest_len when digest_len >= trunc_length -> :ok
+      digest_len when trunc_length != :default and digest_len >= trunc_length -> :ok
       _ -> {:error, @error_invalid_size}
     end
   end
